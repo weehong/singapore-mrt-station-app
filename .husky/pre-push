@@ -1,0 +1,23 @@
+echo "Running pre-push checks..."
+
+echo "Checking code formatting with Prettier..."
+npm run format:check
+if [ $? -ne 0 ]; then
+  echo "Prettier check failed. Please run 'npm run format' to fix formatting issues."
+  exit 1
+fi
+
+echo "Validating commit messages..."
+COMMITS=$(git log @{u}..HEAD --pretty=format:"%s" 2>/dev/null)
+if [ -n "$COMMITS" ]; then
+  while read -r msg; do
+    echo "$msg" | npx --no -- commitlint
+    if [ $? -ne 0 ]; then
+      echo "Commit message validation failed for: $msg"
+      exit 1
+    fi
+  done <<< "$COMMITS"
+fi
+fi
+
+echo "All pre-push checks passed!"
